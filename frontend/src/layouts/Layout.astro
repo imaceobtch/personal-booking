@@ -1,0 +1,26 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+	<head>
+		<ClientRouter />
+		<meta charset="UTF-8" />
+		<meta name="description" content="Personal booking platform" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+	</head>
+	<body class="bg-gray-950 text-white selection:bg-blue-500/30 font-sans antialiased selection:text-blue-200">
+		<slot />
+	</body>
+</html>

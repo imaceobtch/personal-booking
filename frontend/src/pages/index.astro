@@ -1,0 +1,113 @@
+---
+import Layout from '../layouts/Layout.astro';
+import BookingCalendar from '../components/BookingCalendar';
+import { ArrowRight, Briefcase, Compass, FileText, Mail, MessageCircle, Instagram } from 'lucide-react';
+---
+
+<Layout title="Ihor Kiiaiev | Copywriter, Developer, Fixer">
+	<main class="min-h-screen bg-[#050505] text-gray-300 font-serif selection:bg-gray-800 selection:text-white">
+
+		{/* Top Nav / Branding */}
+		<header class="w-full border-b border-gray-900/50 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-50">
+			<div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+				<div class="text-xl font-bold text-white tracking-[0.2em] uppercase">
+					IHOR KIIAIEV
+				</div>
+				<div class="text-xs uppercase tracking-widest text-gray-500 hidden sm:block">
+					Copywriter • Developer • Fixer
+				</div>
+			</div>
+		</header>
+
+		<div class="max-w-6xl mx-auto px-6 py-20 md:py-32 grid lg:grid-cols-[1.3fr,1fr] gap-20 items-start">
+
+			{/* Left Column - Storytelling & Intro */}
+			<div class="flex flex-col space-y-16">
+
+				<div class="space-y-8">
+					<h1 class="text-5xl md:text-7xl font-bold text-white leading-[1.1] tracking-tight">
+						I don't just solve digital problems. <br class="hidden lg:block"/>
+						<span class="text-gray-500 italic font-serif">I handle everything.</span>
+					</h1>
+					<p class="text-xl text-gray-400 leading-relaxed max-w-xl font-sans font-light">
+						I write copy that commands authority, build software that doesn't break, and fix whatever mess you're currently in. You bring the situation; I deliver the outcome.
+					</p>
+				</div>
+
+				{/* What I do */}
+				<div class="grid sm:grid-cols-2 gap-x-8 gap-y-12 font-sans">
+
+					<div class="space-y-4">
+						<div class="w-10 h-10 border border-gray-700 flex items-center justify-center rounded-sm">
+							<FileText class="text-gray-300" size={20} strokeWidth={1.5} />
+						</div>
+						<div>
+							<h3 class="text-white text-lg font-medium tracking-wide mb-2 uppercase text-sm">Strategic Copy</h3>
+							<p class="text-gray-500 text-sm leading-relaxed font-light">
+								Words are leverage. I write persuasive, high-converting copy that doesn't ask for attention—it commands it.
+							</p>
+						</div>
+					</div>
+
+					<div class="space-y-4">
+						<div class="w-10 h-10 border border-gray-700 flex items-center justify-center rounded-sm">
+							<Briefcase class="text-gray-300" size={20} strokeWidth={1.5} />
+						</div>
+						<div>
+							<h3 class="text-white text-lg font-medium tracking-wide mb-2 uppercase text-sm">Robust Development</h3>
+							<p class="text-gray-500 text-sm leading-relaxed font-light">
+								Architecting scalable systems and pixel-perfect applications. Clean code, sophisticated design, zero compromises.
+							</p>
+						</div>
+					</div>
+
+					<div class="space-y-4 sm:col-span-2">
+						<div class="w-10 h-10 border border-gray-700 flex items-center justify-center rounded-sm">
+							<Compass class="text-gray-300" size={20} strokeWidth={1.5} />
+						</div>
+						<div class="max-w-lg">
+							<h3 class="text-white text-lg font-medium tracking-wide mb-2 uppercase text-sm">The Fixer</h3>
+							<p class="text-gray-500 text-sm leading-relaxed font-light">
+								Business strategy, operational bottlenecks, crisis management. If there's a problem in your orbit, I will neutralize it. No excuses, just execution.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				{/* Quick Contact Links */}
+				<div class="pt-10 border-t border-gray-900 font-sans">
+					<h3 class="text-xs font-medium text-gray-600 mb-6 uppercase tracking-[0.2em]">Direct Lines</h3>
+					<div class="flex flex-wrap gap-4">
+						<a href="https://t.me/ihorkiiaiev" class="flex items-center gap-3 px-5 py-3 bg-[#0a0a0a] border border-gray-800 hover:border-gray-500 text-gray-300 hover:text-white transition-all text-sm tracking-wide group rounded-sm">
+							<MessageCircle size={16} strokeWidth={1.5} class="text-gray-400 group-hover:text-white transition-colors" /> Telegram
+						</a>
+						<a href="https://instagram.com/ihorkiiaiev" class="flex items-center gap-3 px-5 py-3 bg-[#0a0a0a] border border-gray-800 hover:border-gray-500 text-gray-300 hover:text-white transition-all text-sm tracking-wide group rounded-sm">
+							<Instagram size={16} strokeWidth={1.5} class="text-gray-400 group-hover:text-white transition-colors" /> Instagram
+						</a>
+						<a href="mailto:ihor@kiiaiev.com" class="flex items-center gap-3 px-5 py-3 bg-[#0a0a0a] border border-gray-800 hover:border-gray-500 text-gray-300 hover:text-white transition-all text-sm tracking-wide group rounded-sm">
+							<Mail size={16} strokeWidth={1.5} class="text-gray-400 group-hover:text-white transition-colors" /> Email
+						</a>
+					</div>
+				</div>
+
+			</div>
+
+			{/* Right Column - Booking Widget */}
+			<div class="relative font-sans lg:sticky lg:top-32">
+				<div class="relative bg-[#080808] border border-gray-800 shadow-[0_0_40px_rgba(0,0,0,0.8)] p-8 sm:p-10 rounded-sm">
+					<div class="mb-10 pb-6 border-b border-gray-900">
+						<h2 class="text-xl font-medium text-white tracking-widest uppercase mb-3">Schedule a Meeting</h2>
+						<p class="text-gray-500 text-sm font-light">Select a time for a 30-minute consultation. Let's get straight to business.</p>
+					</div>
+
+					<BookingCalendar client:load />
+				</div>
+			</div>
+
+		</div>
+
+		<footer class="w-full border-t border-gray-900/50 mt-20 py-10 text-center font-sans">
+			<p class="text-gray-600 text-xs tracking-widest uppercase font-light">© {new Date().getFullYear()} Ihor Kiiaiev. All rights reserved.</p>
+		</footer>
+	</main>
+</Layout>

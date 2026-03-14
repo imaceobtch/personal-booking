@@ -2,17 +2,22 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/apognu/gocal"
+	"github.com/emersion/go-webdav/caldav"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gopkg.in/gomail.v2"
 )
 
 // BookingRequest struct
@@ -170,13 +175,13 @@ func bookMeeting(c *gin.Context) {
 	bookings[bookingID] = booking
 	bookingsMutex.Unlock()
 
-	// 1. Create event in Apple Calendar via CalDAV (mocked or actual if credentials present)
+	// 1. Create event in Apple Calendar via CalDAV
 	caldavURL := os.Getenv("CALDAV_URL")
 	caldavUser := os.Getenv("CALDAV_USER")
 	caldavPass := os.Getenv("CALDAV_PASS")
 
 	if caldavURL != "" && caldavUser != "" && caldavPass != "" {
-		fmt.Printf("Would write to CalDAV: %s, %s, %s\n", req.Name, req.Email, req.Time)
+		go createCalDAVEvent(caldavURL, caldavUser, caldavPass, booking)
 	} else {
 		fmt.Println("No CalDAV credentials, skipping calendar write.")
 	}
@@ -190,9 +195,9 @@ func bookMeeting(c *gin.Context) {
 		fmt.Println("No Telegram credentials, skipping notification.")
 	}
 
-	// 3. Send Email Notification (via Resend or similar) - Mocked for now
+	// 3. Send Email Notification
 	managementURL := fmt.Sprintf("http://localhost:4321/booking/%s", bookingID)
-	fmt.Printf("Would send email to %s confirming booking at %s via %s. Management link: %s\n", req.Email, req.Time, req.Platform, managementURL)
+	go sendEmailNotification(booking, managementURL)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status": "booked successfully",
@@ -289,4 +294,150 @@ func sendTelegramNotification(token, chatID string, booking Booking, action stri
 	body, _ := json.Marshal(payload)
 
 	http.Post(url, "application/json", bytes.NewBuffer(body))
+}
+
+func createCalDAVEvent(urlStr, user, pass string, booking Booking) {
+	req, _ := http.NewRequest("OPTIONS", urlStr, nil)
+	req.SetBasicAuth(user, pass)
+
+	// Since go-webdav/caldav requires specific request modifiers for auth in its newer version,
+	// let's wrap the client if needed, or simply pass context.Background()
+
+	// Create a transport that sets basic auth for every request
+	authTransport := &basicAuthTransport{
+		Username: user,
+		Password: pass,
+		Transport: http.DefaultTransport,
+	}
+
+	httpClient := &http.Client{Transport: authTransport}
+	client, err := caldav.NewClient(httpClient, urlStr)
+	if err != nil {
+		fmt.Println("CalDAV Error creating client:", err)
+		return
+	}
+
+	ctx := context.Background()
+	principal, err := client.FindCurrentUserPrincipal(ctx)
+	if err != nil {
+		fmt.Println("CalDAV Error finding principal:", err)
+		return
+	}
+
+	homeSet, err := client.FindCalendarHomeSet(ctx, principal)
+	if err != nil {
+		fmt.Println("CalDAV Error finding home set:", err)
+		return
+	}
+
+	calendars, err := client.FindCalendars(ctx, homeSet)
+	if err != nil || len(calendars) == 0 {
+		fmt.Println("CalDAV Error finding calendars or no calendars found:", err)
+		return
+	}
+
+	// We pick the first calendar for simplicity
+	calURL := calendars[0].Path
+
+	startTime, _ := time.Parse(time.RFC3339, booking.Time)
+	endTime := startTime.Add(30 * time.Minute)
+
+	icsContent := fmt.Sprintf(`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Ihor Kiiaiev//Booking System//EN
+BEGIN:VEVENT
+UID:%s
+DTSTAMP:%s
+DTSTART:%s
+DTEND:%s
+SUMMARY:Meeting with %s
+DESCRIPTION:Platform: %s\nEmail: %s
+END:VEVENT
+END:VCALENDAR`,
+		booking.ID,
+		time.Now().UTC().Format("20060102T150405Z"),
+		startTime.UTC().Format("20060102T150405Z"),
+		endTime.UTC().Format("20060102T150405Z"),
+		booking.Name,
+		booking.Platform,
+		booking.Email,
+	)
+
+	parsedURL, _ := url.ParseRequestURI(urlStr)
+
+	putURL := parsedURL.Scheme + "://" + parsedURL.Host + calURL + booking.ID + ".ics"
+	putReq, err := http.NewRequest("PUT", putURL, bytes.NewBufferString(icsContent))
+	if err != nil {
+		fmt.Println("Error creating CalDAV PUT request:", err)
+		return
+	}
+	putReq.Header.Set("Content-Type", "text/calendar; charset=utf-8")
+
+	resp, err := httpClient.Do(putReq)
+	if err != nil {
+		fmt.Println("Error performing CalDAV PUT:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		fmt.Println("Failed to create CalDAV event, status:", resp.Status)
+	} else {
+		fmt.Println("Successfully created CalDAV event.")
+	}
+}
+
+func sendEmailNotification(booking Booking, managementURL string) {
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort := 587 // default
+	smtpUser := os.Getenv("SMTP_USER")
+	smtpPass := os.Getenv("SMTP_PASS")
+	fromEmail := os.Getenv("SMTP_FROM")
+
+	if smtpHost == "" || smtpUser == "" || smtpPass == "" || fromEmail == "" {
+		fmt.Printf("SMTP credentials missing, would send email to %s confirming booking at %s via %s. Management link: %s\n", booking.Email, booking.Time, booking.Platform, managementURL)
+		return
+	}
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", fromEmail)
+	m.SetHeader("To", booking.Email)
+	m.SetHeader("Subject", "Booking Confirmation: Meeting with Ihor Kiiaiev")
+
+	body := fmt.Sprintf(`
+		<h1>Meeting Confirmed</h1>
+		<p>Hi %s,</p>
+		<p>Your meeting with Ihor is confirmed for %s.</p>
+		<p>Platform: %s</p>
+		<br/>
+		<p>Need to make changes? Manage your booking here: <a href="%s">%s</a></p>
+	`, booking.Name, booking.Time, booking.Platform, managementURL, managementURL)
+
+	m.SetBody("text/html", body)
+
+	d := gomail.NewDialer(smtpHost, smtpPort, smtpUser, smtpPass)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+	if err := d.DialAndSend(m); err != nil {
+		fmt.Println("Error sending email:", err)
+	} else {
+		fmt.Println("Email sent to", booking.Email)
+	}
+}
+
+type basicAuthTransport struct {
+	Username  string
+	Password  string
+	Transport http.RoundTripper
+}
+
+func (bat *basicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req2 := new(http.Request)
+	*req2 = *req
+	req2.Header = make(http.Header, len(req.Header))
+	for k, s := range req.Header {
+		req2.Header[k] = append([]string(nil), s...)
+	}
+	req2.SetBasicAuth(bat.Username, bat.Password)
+	return bat.Transport.RoundTrip(req2)
 }
