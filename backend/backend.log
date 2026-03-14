@@ -1,0 +1,24 @@
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /api/availability         --> main.getAvailability (4 handlers)
+[GIN-debug] POST   /api/book                 --> main.bookMeeting (4 handlers)
+[GIN-debug] GET    /api/booking/:id          --> main.getBooking (4 handlers)
+[GIN-debug] PUT    /api/booking/:id          --> main.rescheduleBooking (4 handlers)
+[GIN-debug] DELETE /api/booking/:id          --> main.cancelBooking (4 handlers)
+Backend listening on port 8080
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8080
+No CalDAV credentials, skipping calendar write.
+No Telegram credentials, skipping notification.
+Would send email to jane@example.com confirming booking at 2026-03-14T11:30:00Z via Telegram Call. Management link: http://localhost:4321/booking/6300a409-48b5-49bd-8294-4d3e8dd90b10
+[GIN] 2026/03/14 - 18:49:43 | 200 | 346.74µs |             ::1 | POST     "/api/book"
+[GIN] 2026/03/14 - 18:49:52 | 200 | 539.751µs |             ::1 | GET      "/api/booking/6300a409-48b5-49bd-8294-4d3e8dd90b10"
+[GIN] 2026/03/14 - 18:49:53 | 200 | 60.355µs |             ::1 | GET      "/api/booking/6300a409-48b5-49bd-8294-4d3e8dd90b10"
+[GIN] 2026/03/14 - 18:49:58 | 204 |  9.853µs |             ::1 | OPTIONS  "/api/booking/6300a409-48b5-49bd-8294-4d3e8dd90b10"
+Booking 6300a409-48b5-49bd-8294-4d3e8dd90b10 cancelled
+[GIN] 2026/03/14 - 18:49:58 | 200 | 49.382µs |             ::1 | DELETE   "/api/booking/6300a409-48b5-49bd-8294-4d3e8dd90b10"
