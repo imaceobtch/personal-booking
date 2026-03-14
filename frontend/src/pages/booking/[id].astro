@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ManageBooking from '../../components/ManageBooking';
+
+// When output is 'server', we don't need getStaticPaths()
+const { id } = Astro.params;
+---
+
+<Layout title="Manage Your Booking | Personal Booking Platform">
+	<main class="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-4 py-12 sm:py-24">
+
+		<div class="text-center mb-10 w-full max-w-2xl">
+			<h1 class="text-3xl sm:text-4xl font-serif font-extrabold text-white tracking-tight mb-2">Manage Booking</h1>
+			<p class="text-gray-400 text-lg max-w-md mx-auto">
+				View your appointment details, reschedule for a better time, or cancel if you can't make it.
+			</p>
+		</div>
+
+		<div class="w-full">
+			<ManageBooking id={id as string} client:load />
+		</div>
+
+	</main>
+</Layout>
